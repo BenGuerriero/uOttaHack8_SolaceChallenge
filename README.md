@@ -1,4 +1,4 @@
-# Career Coach AI - Solace Hackathon Project
+#AangAI Career Coach - Solace Hackathon Project
 
 An event-driven career coaching platform using Solace Agent Mesh and SurveyMonkey for invisible feedback collection.
 
@@ -94,3 +94,4 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
 - Solace PubSub+ Cloud credentials
 - SurveyMonkey API key
 - OpenAI API key (or Ollama for local LLM)
+
