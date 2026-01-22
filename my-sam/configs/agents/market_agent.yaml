@@ -1,0 +1,84 @@
+# Solace Agent Mesh Agent Configuration
+
+log:
+  stdout_log_level: INFO
+  log_file_level: DEBUG
+  log_file: a2a_agent.log
+
+!include ../shared_config.yaml
+
+apps:
+  - name: "MarketAgent__app"
+    app_base_path: .
+    app_module: solace_agent_mesh.agent.sac.app
+    broker:
+      <<: *broker_connection
+
+    app_config:
+      namespace: "${NAMESPACE}"
+      supports_streaming: true
+      agent_name: "MarketAgent"
+      display_name: "Market Agent"
+      model: *general_model 
+
+      instruction: |
+        You are a helpful AI assistant named Market_Agent.
+        
+        Your primary purpose is to take conversation data from Aang AI (the Orchestrator Agent), as well as optional resume information from the user, and generate a concise list of market-fit possibilities.
+        
+        Guidelines:
+        1. Analyze the user’s interests, skills, and experience.
+        2. Consider qualifications from resume or conversational keywords.
+        3. Return a short list (3–5) of tailored market/job possibilities.
+        4. Include a brief explanation for why each option matches the user.
+        5. Only provide actionable market-fit recommendations, do not provide unrelated career advice.
+      
+      tools: 
+        - tool_type: builtin-group
+          group_name: artifact_management
+        - tool_type: builtin-group
+          group_name: data_analysis
+        - tool_type: builtin-group
+          group_name: web_search
+
+      session_service: 
+        type: "sql"
+        default_behavior: "PERSISTENT"
+        database_url: "${MARKET_AGENT_DATABASE_URL, sqlite:///market_agent.db}"
+      artifact_service: *default_artifact_service
+      
+      artifact_handling_mode: "reference"
+      enable_embed_resolution: true
+      enable_artifact_content_instruction: true
+      data_tools_config: *default_data_tools_config
+
+      # Agent Card Definition
+      agent_card:
+        description: |
+          agent_card:
+            description: "Analyzes user interests and qualifications to suggest tailored market-fit job possibilities."
+            defaultInputModes: [text]
+            defaultOutputModes: [text, file]
+            skills:
+              - id: market_fit_analysis
+                name: Market Fit Analysis
+                description: "Takes user conversation and optional resume info to generate a short, actionable list of market-fit opportunities."
+        defaultInputModes: [text] 
+        defaultOutputModes: [text, file] 
+        skills: 
+          - description: "Analyzes user conversation and optional resume data to generate a\
+              \ concise list of tailored market-fit opportunities. Each recommendation includes\
+              \ a short explanation of why it matches the user\u2019s interests, skills, and\
+              \ qualifications.\n"
+            id: market_fit_analysis
+            name: Market Fit Analysis
+      
+      # Discovery & Communication
+      agent_card_publishing: 
+        interval_seconds: 10
+      agent_discovery: 
+        enabled: true
+      inter_agent_communication:
+        allow_list: ["*"] 
+        deny_list: [] 
+        request_timeout_seconds: 600

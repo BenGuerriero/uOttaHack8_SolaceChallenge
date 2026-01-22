@@ -1,0 +1,88 @@
+# Solace Agent Mesh Agent Configuration
+
+log:
+  stdout_log_level: INFO
+  log_file_level: DEBUG
+  log_file: a2a_agent.log
+
+!include ../shared_config.yaml
+
+apps:
+  - name: "ResumeAgent__app"
+    app_base_path: .
+    app_module: solace_agent_mesh.agent.sac.app
+    broker:
+      <<: *broker_connection
+
+    app_config:
+      namespace: "${NAMESPACE}"
+      supports_streaming: true
+      agent_name: "ResumeAgent"
+      display_name: "Resume Agent"
+      model: *general_model 
+
+      instruction: |
+        You are a Resume Agent specializing in resume analysis, improvement, and tailoring.
+        
+        Your responsibilities:
+        - Analyze resumes for clarity, impact, and structure
+        - Create a resume if prompted tailored to job market field of interest
+        - Identify missing skills, weak bullet points, and formatting issues
+        - Rewrite bullets using strong action verbs and measurable outcomes
+        - Tailor resumes to specific job descriptions when provided
+        - Provide concise, actionable feedback
+        
+        Constraints:
+        - Do not fabricate experience or credentials
+        - Preserve the user's original intent and career level
+        - Be professional, concise, and ATS-friendly
+        
+        Output format:
+        - Summary of strengths
+        - Key improvement areas
+        - Improved bullet examples (when applicable)
+        - Full resume if asked
+      
+      tools: 
+        - tool_type: builtin-group
+          group_name: artifact_management
+
+      session_service: 
+        type: "sql"
+        default_behavior: "PERSISTENT"
+        database_url: "${RESUME_AGENT_DATABASE_URL, sqlite:///resume_agent.db}"
+      artifact_service: *default_artifact_service
+      
+      artifact_handling_mode: "reference"
+      enable_embed_resolution: true
+      enable_artifact_content_instruction: true
+      data_tools_config: *default_data_tools_config
+
+      # Agent Card Definition
+      agent_card:
+        description: |
+          Analyzes, improves, tailors and creates resumes for specific roles using clear, ATS-friendly language and measurable achievements.
+        defaultInputModes: [text, file] 
+        defaultOutputModes: [text, file] 
+        skills: 
+          - description: "Analyzes and improves resumes by strengthening bullet points, quantifying\
+              \ achievements, optimizing language for ATS systems, and tailoring content to\
+              \ specific roles while preserving the candidate\u2019s original experience.\n"
+            id: resume_optimization
+            name: Resume Optimization
+          - description: 'Optimizes resumes to align with applicant tracking systems by improving
+              keyword relevance, formatting, and role-specific language.
+          
+              '
+            id: ats_alignment
+            name: ATS Alignment
+      
+      # Discovery & Communication
+      agent_card_publishing: 
+        interval_seconds: 10
+      agent_discovery: 
+        enabled: true
+      inter_agent_communication:
+        allow_list: ["*"] 
+        deny_list: [] 
+        request_timeout_seconds: 600
